@@ -30,7 +30,10 @@ var Preferences = {
       this.onClick(i);
     }
 
-    SimplePrefs.on('', Preferences.onPrefChange);
+    SimplePrefs.on('', function (name) {
+      var array = name.split('_');
+      Preferences.manifest(name, Profiles[array[1]], array[2]);
+    });
   },
   onClick: function (number) {
     SimplePrefs.on('edit_list_' + number, function () {
@@ -41,10 +44,6 @@ var Preferences = {
       SimplePrefs.prefs['proxy_' + number + '_server'] = '';
       SimplePrefs.prefs['proxy_' + number + '_list'] = '';
     });
-  },
-  onPrefChange: function (name) {
-    var array = name.split('_');
-    Preferences.manifest(name, Profiles[array[1]], array[2]);
   },
   manifest: function (name, profile, pref) {
     profile[pref] = SimplePrefs.prefs[name];

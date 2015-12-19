@@ -60,17 +60,20 @@ var Preferences = {
 
 var Feeds = {
   analyze: function (profile) {
-    OS.File.stat(profile.file).then(function onSuccess(data) {
-      if (Date.parse(data.lastModificationDate) + 4 * 86400000 < Date.now()) {
-        Feeds.fetch(profile);
-      } else {
-        Execution.scan(profile);
+    OS.File.stat(profile.file).then(
+      function onSuccess(data) {
+        if (Date.parse(data.lastModificationDate) + 4 * 86400000 < Date.now()) {
+          Feeds.fetch(profile);
+        } else {
+          Execution.scan(profile);
+        }
+      },
+      function onFailure(reason) {
+        if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+          Feeds.fetch(profile);
+        }
       }
-    }, function onFailure(reason) {
-      if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
-        Feeds.fetch(profile);
-      }
-    });
+    );
   },
   fetch: function (profile, probe) {
     if (probe == undefined) probe = 0;
@@ -78,13 +81,16 @@ var Feeds = {
     probe = probe + 1;
 
     var temp = profile.file + '_sp';
-    Downloads.fetch(profile.list, temp, {isPrivate: true}).then(function onSuccess() {
-      OS.File.move(temp, profile.file);
-      Execution.scan(profile);
-    }, function onFailure() {
-      Directories.addFolder();
-      Feeds.fetch(profile, probe);
-    });
+    Downloads.fetch(profile.list, temp, {isPrivate: true}).then(
+      function onSuccess() {
+        OS.File.move(temp, profile.file);
+        Execution.scan(profile);
+      },
+      function onFailure() {
+        Directories.addFolder();
+        Feeds.fetch(profile, probe);
+      }
+    );
   }
 };
 
@@ -119,30 +125,33 @@ var Execution = {
     }
   },
   scan: function (profile) {
-    OS.File.read(profile.file).then(function onSuccess(array) {
-      var decoder = new TextDecoder();
-      var data = decoder.decode(array);
-      profile.white = { regexp: new Array(), string: new Array() };
-      profile.match = { regexp: new Array(), string: new Array() };
+    OS.File.read(profile.file).then(
+      function onSuccess(array) {
+        var decoder = new TextDecoder();
+        var data = decoder.decode(array);
+        profile.white = { regexp: new Array(), string: new Array() };
+        profile.match = { regexp: new Array(), string: new Array() };
 
-      try {
-        var list = ChromeWindow.atob(data).split(/[\r\n]+/);
-      } catch (e) {
-        var list = data.split(/[\r\n]+/);
-      }
+        try {
+          var list = ChromeWindow.atob(data).split(/[\r\n]+/);
+        } catch (e) {
+          var list = data.split(/[\r\n]+/);
+        }
 
-      for (var i in list) {
-        if (list[i].startsWith('@@')) {
-          Execution.normalize(profile.white, list[i].substr(2))
-        } else {
-          Execution.normalize(profile.match, list[i])
+        for (var i in list) {
+          if (list[i].startsWith('@@')) {
+            Execution.normalize(profile.white, list[i].substr(2))
+          } else {
+            Execution.normalize(profile.match, list[i])
+          }
+        }
+      },
+      function onFailure(reason) {
+        if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+          ChromeWindow.console.log(Locales('fileNotExsit') + '\r\n' + Locales(profile.debug));
         }
       }
-    }, function onFailure(reason) {
-      if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
-        ChromeWindow.console.log(Locales('fileNotExsit') + '\r\n' + Locales(profile.debug));
-      }
-    });
+    );
   },
   normalize: function (proxy, rule) {
     if (rule.startsWith('||')) {
@@ -168,27 +177,30 @@ var Execution = {
   editor: function (profile) {
     if (profile.noedit || !profile.file) return;
 
-    OS.File.read(profile.file).then(function onSuccess(array) {
-      var decoder = new TextDecoder();
-      var data = decoder.decode(array);
+    OS.File.read(profile.file).then(
+      function onSuccess(array) {
+        var decoder = new TextDecoder();
+        var data = decoder.decode(array);
 
-      var ScratchpadManager = ChromeWindow.Scratchpad.ScratchpadManager;
-      ScratchpadManager.openScratchpad({
-        'filename': profile.file,
-        'text': data,
-        'saved': true,
-      }).addEventListener('click', function click(event) {
-        if (event.target.id == 'sp-toolbar-save') {
-          event.target.ownerDocument.defaultView.addEventListener('close', function close(event) {
-            Execution.scan(profile);
-          }, false);
+        var ScratchpadManager = ChromeWindow.Scratchpad.ScratchpadManager;
+        ScratchpadManager.openScratchpad({
+          'filename': profile.file,
+          'text': data,
+          'saved': true,
+        }).addEventListener('click', function click(event) {
+          if (event.target.id == 'sp-toolbar-save') {
+            event.target.ownerDocument.defaultView.addEventListener('close', function close(event) {
+              Execution.scan(profile);
+            }, false);
+          }
+        }, false);
+      },
+      function onFailure(reason) {
+        if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+          return ChromeWindow.console.log(Locales('fileNotExsit') + '\r\n' + Locales(profile.debug));
         }
-      }, false);
-    }, function onFailure(reason) {
-      if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
-        return ChromeWindow.console.log(Locales('fileNotExsit') + '\r\n' + Locales(profile.debug));
       }
-    });
+    );
   }
 };
 

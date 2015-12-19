@@ -29,7 +29,7 @@ var Preferences = {
 
       this.onClick(i);
     }
-
+ChromeWindow.console.log(Profiles)
     SimplePrefs.on('', function (name) {
       var array = name.split('_');
       Preferences.manifest(name, Profiles[array[1]], array[2]);
@@ -146,17 +146,17 @@ var Execution = {
   },
   normalize: function (proxy, rule) {
     if (rule.startsWith('||')) {
-      var regexp = new RegExp(rule.replace(/\./gi, '\\.').replace(/\*/gi, '.*').replace('^', '').replace('||', '^https?://([^\\/]+\\.)*'), 'i');
+      var regexp = new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*').replace('^', '').replace('||', '^https?://([^\\/]+\\.)*'));
       proxy.regexp.push(regexp);
     } else if (rule.startsWith('|')) {
-      var regexp = new RegExp(rule.replace(/\./gi, '\\.').replace(/\*/gi, '.*').replace('|', '^'), 'i');
+      var regexp = new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*').replace('|', '^'));
       proxy.regexp.push(regexp);
-    } else if (rule.startsWith('/')) {
-      var regexp = new RegExp(rule.substring(1, rule.length - 1), 'i');
+    } else if (rule.startsWith('/') && rule.endsWith('/')) {
+      var regexp = new RegExp(rule.substring(1, rule.length - 1));
       proxy.regexp.push(regexp);
-    } else if (rule.match(/^[\w\.\/]/i)) {
+    } else if (rule.match(/^[\w\.\/]/)) {
       if (rule.includes('*')) {
-        var regexp = new RegExp(rule.replace(/\./gi, '\\.').replace(/\*/gi, '.*'), 'i');
+        var regexp = new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*'));
         proxy.regexp.push(regexp);
       } else {
         proxy.string.push(rule);

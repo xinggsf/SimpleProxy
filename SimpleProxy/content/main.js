@@ -29,7 +29,7 @@ var Preferences = {
 
       this.onClick(i);
     }
-ChromeWindow.console.log(Profiles)
+
     SimplePrefs.on('', function (name) {
       var array = name.split('_');
       Preferences.manifest(name, Profiles[array[1]], array[2]);

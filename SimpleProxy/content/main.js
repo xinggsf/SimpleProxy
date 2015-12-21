@@ -78,8 +78,8 @@ var Feeds = {
   fetch: function (profile, probe) {
     if (probe == undefined) probe = 0;
     if (probe > 3) return ChromeWindow.console.log(Locales('fetchFailed') + '\r\n' + Locales(profile.debug));
-    probe = probe + 1;
 
+    probe ++;
     var temp = profile.file + '_sp';
     Downloads.fetch(profile.list, temp, {isPrivate: true}).then(
       function onSuccess() {
@@ -186,14 +186,22 @@ var Execution = {
         ScratchpadManager.openScratchpad({
           'filename': profile.file,
           'text': data,
-          'saved': true,
-        }).addEventListener('click', function click(event) {
-          if (event.target.id == 'sp-toolbar-save') {
-            event.target.ownerDocument.defaultView.addEventListener('close', function close(event) {
-              Execution.scan(profile);
-            }, false);
-          }
-        }, false);
+          'saved': true
+        }).addEventListener(
+          'click',
+          function click(event) {
+            if (event.target.id == 'sp-toolbar-save') {
+              event.target.ownerDocument.defaultView.addEventListener(
+                'close',
+                function close(event) {
+                  Execution.scan(profile);
+                },
+                false
+              );
+            }
+          },
+          false
+        );
       },
       function onFailure(reason) {
         if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {

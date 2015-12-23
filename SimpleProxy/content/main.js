@@ -32,7 +32,7 @@ var Preferences = {
 
     SimplePrefs.on('', function (name) {
       var number = name.split('_')[1];
-      var pref =  name.split('_')[2];
+      var pref = name.split('_')[2];
       Preferences.manifest(name, Profiles[number], pref);
     });
   },
